@@ -21,8 +21,9 @@ app.use(bodyParser.json())
 app.use(bodyParser.json({ type: 'application/vnd.api+json' }))
 
 
+app.get("/diagnostic", function(req, res) { res.end(); });
 // respond
-app.post("/notify", function(req, res){
+app.post("/send", function(req, res){
   if ( ! req.body || _.isEmpty(req.body) ){
     log.error("no request body ( message ) found in request");
     res.status(400).end("no message found, invalid content type?");
