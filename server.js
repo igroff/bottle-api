@@ -26,7 +26,7 @@ app.get("/diagnostic", function(req, res) { res.end(); });
 app.post("/send", function(req, res){
   if ( ! req.body || _.isEmpty(req.body) ){
     log.error("no request body ( message ) found in request");
-    res.status(400).end("no message found, invalid content type?");
+    res.status(400).end();
   } else {
     sqs = new AWS.SQS();
     function sendCallback(err, data){
