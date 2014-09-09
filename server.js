@@ -20,29 +20,37 @@ app.use(bodyParser.json())
 // parse application/vnd.api+json as json
 app.use(bodyParser.json({ type: 'application/vnd.api+json' }))
 
+function sendMessage(res, messageBody){
+  function pingCallback(err, data){
+    if ( err ){
+      log.error("error sending message to router: " + err);
+      message.Error = "error sending message to router: " + err;
+      data = message;
+      res.status(500);
+    }
+    res.send(data);
+  }
+  message = {
+    QueueUrl: process.env.ROUTER_QUEUE_URL,
+    MessageBody: messageBody
+  };
+  var sqs = new AWS.SQS();
+  sqs.sendMessage(message, pingCallback);
+}
 
-app.get("/diagnostic", function(req, res) { res.end(); });
-// respond
+app.get("/diagnostic",
+  function(req, res) { res.end(); }
+);
+app.get("/ping",
+  function(req, res) { sendMessage(res, '{"source": "/bottle/ping"}');}
+); 
+
 app.post("/send", function(req, res){
   if ( ! req.body || _.isEmpty(req.body) ){
     log.error("no request body ( message ) found in request");
     res.status(400).end();
   } else {
-    sqs = new AWS.SQS();
-    function sendCallback(err, data){
-      if ( err ){
-        log.error("error sending mssage to router: " + err);
-        res.status(500);
-      }
-      res.end(data);
-    }
-    log.info("sending %s to router q", JSON.stringify(req.body));
-    res.end(JSON.stringify(req.body));
-    sqs.sendMessage(
-      {
-        QueueUrl: process.env.ROUTER_QUEUE_URL,
-        MessageBody: JSON.stringify(req.body)
-      }, sendCallback);
+    sendMessage(res, JSON.stringify(req.body));
   }
 });
 
