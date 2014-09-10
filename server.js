@@ -23,37 +23,50 @@ app.use(bodyParser.json())
 // parse application/vnd.api+json as json
 app.use(bodyParser.json({ type: 'application/vnd.api+json' }))
 
-function sendMessage(res, messageBody){
-  function pingCallback(err, data){
+function sendMessage(res, messageBody, callback){
+  function sendMessageCallback(err, data){
     if ( err ){
       log.error("error sending message to router: " + err);
       message.Error = "error sending message to router: " + err;
       data = message;
       res.status(500);
     }
-    res.send(data);
+    if ( callback ){
+      callback();
+    } else {
+      res.send(data);
+    }
   }
   message = {
     QueueUrl: process.env.ROUTER_QUEUE_URL,
     MessageBody: messageBody
   };
   var sqs = new AWS.SQS();
-  sqs.sendMessage(message, pingCallback);
+  sqs.sendMessage(message, sendMessageCallback);
 }
 
 app.get("/diagnostic",
   function(req, res) { res.end(); }
 );
+
 app.get("/ping",
   function(req, res) {
-    sendMessage(res, '{"source": "/bottle/ping"}');
-    res.send(lastMessage);
+    sendMessage(
+      res,
+      '{"source": "/bottle/ping"}',
+      function (){ res.send(lastMessage); }
+    );
   }
 ); 
+
+app.get("/ping/lastReceived", function(req, res){
+  res.send(lastMessage);
+});
+
 app.post("/ping/receive",
   function(req, res) {
     lastMessage.Date = new Date();
-    res.send(lastMessage);
+    res.send({});
   }
 );
 
