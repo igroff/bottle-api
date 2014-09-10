@@ -8,6 +8,9 @@ var log             = require('simplog');
 var AWS             = require('aws-sdk');
 var _               = require('lodash');
 
+// yup, it's a global variable to hold the last ping we received
+// it's for diagnostic, and screw it...
+lastMessage = {}
 
 var app = express();
 AWS.config.update({region: process.env.AWS_REGION || "us-east-1"});
@@ -42,8 +45,14 @@ app.get("/diagnostic",
   function(req, res) { res.end(); }
 );
 app.get("/ping",
-  function(req, res) { sendMessage(res, '{"source": "/bottle/ping"}');}
+  function(req, res) {
+    sendMessage(res, '{"source": "/bottle/ping"}');
+    res.send(lastMessage);
+  }
 ); 
+app.post("/ping/receive",
+  function(req, res) { lastMessage.Date = new Date(); }
+);
 
 app.post("/send", function(req, res){
   if ( ! req.body || _.isEmpty(req.body) ){
