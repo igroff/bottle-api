@@ -51,7 +51,10 @@ app.get("/ping",
   }
 ); 
 app.post("/ping/receive",
-  function(req, res) { lastMessage.Date = new Date(); }
+  function(req, res) {
+    lastMessage.Date = new Date();
+    res.send(lastMessage);
+  }
 );
 
 app.post("/send", function(req, res){
