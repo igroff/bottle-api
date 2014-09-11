@@ -10,7 +10,9 @@ var _               = require('lodash');
 
 // yup, it's a global variable to hold the last ping we received
 // it's for diagnostic, and screw it...
-lastMessage = {}
+// We check for the last time we recieved a message, and if it's not recent
+// enough, we'll indicate that so we start with a really old date
+lastMessage = {Date: new Date(0)}
 
 var app = express();
 AWS.config.update({region: process.env.AWS_REGION || "us-east-1"});
@@ -45,17 +47,23 @@ function sendMessage(res, messageBody, callback){
   sqs.sendMessage(message, sendMessageCallback);
 }
 
+function returnBasedOnLastMessageAge(res){
+  // if our last message was received more than 5 minutes ago
+  // we'll return a 500 indicating an issue
+  if ( new Date().getTime() - lastMessage.Date.getTime() > (5 * 60 * 1000) ){
+    res.status(500).send(lastMessage);
+  } else {
+    res.send(lastMessage);
+  }
+}
+
 app.get("/diagnostic",
   function(req, res) { res.end(); }
 );
 
 app.get("/ping",
   function(req, res) {
-    sendMessage(
-      res,
-      '{"source": "/bottle/ping"}',
-      function (){ res.send(lastMessage); }
-    );
+    sendMessage( res, '{"source": "/bottle/ping"}', function(){returnBasedOnLastMessageAge(res);});
   }
 ); 
 
