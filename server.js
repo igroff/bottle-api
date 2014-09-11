@@ -68,7 +68,7 @@ app.get("/ping",
 ); 
 
 app.get("/ping/lastReceived", function(req, res){
-  res.send(lastMessage);
+  returnBasedOnLastMessageAge(res);
 });
 
 app.post("/ping/receive",
