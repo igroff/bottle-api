@@ -90,6 +90,7 @@ app.get("/ping/lastReceived", function(req, res){
 app.post("/ping/receive",
   function(req, res) {
     var message = req.body;  
+    log.debug("processing message: %j", message);
     if ( !message ){
       res.status(500).send({error:"No message found in request"});
       return;
@@ -111,7 +112,7 @@ app.post("/ping/receive",
 app.post("/ping/didYouGetThese",
   function(req, res){
     var sequenceList = req.body;  
-    if ( !sequenceList ){
+    if ( !sequenceList || !_.isArray(sequenceList) || sequenceList.length === 0){
       res.status(500).send({error:"No message found in request"});
       return;
     } 
@@ -126,12 +127,12 @@ app.post("/ping/didYouGetThese",
       }
     }
     // remove any of the messages that we've validated as being received by us
-    receivedPings = _.remove(receivedPings, function(message) { return _.contains(sequenceList, message.sequence); });
-    res.send({message:"got 'em all"});
+    _.remove(receivedPings, function(message) { return _.contains(sequenceList, message.sequence); });
+    res.send({message:"got 'em all", sequenceNumbers:sequenceList});
   }
 );
 
-app.post("/ping/clearReceieved",
+app.post("/ping/clearReceived",
   function(req, res){ 
     receivedPings = [];
     res.send({message:"ok"});
