@@ -8,6 +8,7 @@ watch:
 lint:
 	find ./src -name '*.coffee' | xargs ./node_modules/.bin/coffeelint -f ./etc/coffeelint.conf
 	find ./src -name '*.js' | xargs ./node_modules/.bin/jshint 
+	./node_modules/.bin/jshint server.js
 
 install: node_modules/
 
