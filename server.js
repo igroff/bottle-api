@@ -13,6 +13,7 @@ var _               = require('lodash');
 // We check for the last time we recieved a message, and if it's not recent
 // enough, we'll indicate that so we start with a really old date
 var lastPingMessage = {Date: new Date(0)};
+var lastPingSentAt = new Date(0);
 // here we store all the messages that we've received so we can see
 // that we're receiving everything sent in a timely manner
 var receivedPings = [];
@@ -80,6 +81,7 @@ app.get("/ping",
       '{"source": "/bottle/ping", "sequence":' + (pingSequenceNumber++) + '}',
       function(){returnBasedOnLastMessageAge(res);}
     );
+    lastPingSentAt = new Date();
   }
 ); 
 
@@ -89,7 +91,7 @@ app.get("/ping/lastReceived", function(req, res){
 
 app.get("/ping/currentSequenceNumber", 
   function(req, res){
-    res.send({currentSequenceNumber: pingSequenceNumber});
+    res.send({currentSequenceNumber: pingSequenceNumber, sent:lastPingSentAt});
 });
 
 app.post("/ping/receive",
