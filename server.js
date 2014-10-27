@@ -87,6 +87,11 @@ app.get("/ping/lastReceived", function(req, res){
   returnBasedOnLastMessageAge(res);
 });
 
+app.get("/ping/currentSequenceNumber", 
+  function(req, res){
+    res.send({currentSequenceNumber: pingSequenceNumber});
+});
+
 app.post("/ping/receive",
   function(req, res) {
     var message = req.body;  
@@ -138,6 +143,7 @@ app.post("/ping/clearReceived",
     res.send({message:"ok"});
   }
 );
+
 
 app.get("/ping/showReceived",
   function(req,res){
