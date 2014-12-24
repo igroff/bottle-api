@@ -20,6 +20,7 @@ var receivedPings = [];
 // tracking a sequence number for the ping messages we send so that we
 // can validate everyone's reception of the messages
 var pingSequenceNumber = 0;
+var pingsSent = [];
 
 var app = express();
 AWS.config.update({region: process.env.AWS_REGION || "us-east-1"});
@@ -43,12 +44,17 @@ function sendMessage(res, messageBody, callback){
       res.send(data);
     }
   }
-  message = {
-    QueueUrl: process.env.ROUTER_QUEUE_URL,
-    MessageBody: messageBody
-  };
-  var sqs = new AWS.SQS();
-  sqs.sendMessage(message, sendMessageCallback);
+  if (process.env.DO_NOT_QUEUE){
+    log.info("not queueing message as per config");
+    sendMessageCallback(null, {});
+  }else{
+    message = {
+      QueueUrl: process.env.ROUTER_QUEUE_URL,
+      MessageBody: messageBody
+    };
+    var sqs = new AWS.SQS();
+    sqs.sendMessage(message, sendMessageCallback);
+  }
 }
 
 function returnBasedOnLastMessageAge(res){
@@ -77,9 +83,13 @@ app.get("/diagnostic",
 // short cut to sending a specific (/bottle/ping) message
 app.get("/ping",
   function(req, res) {
+    var messageStr = '{"source": "/bottle/ping", "sequence":' + (pingSequenceNumber++) + '}'
     sendMessage(res,
-      '{"source": "/bottle/ping", "sequence":' + (pingSequenceNumber++) + '}',
-      function(){returnBasedOnLastMessageAge(res);}
+      messageStr,
+      function(){
+        returnBasedOnLastMessageAge(res);
+        pingsSent.push(JSON.parse(messageStr));
+      }
     );
     lastPingSentAt = new Date();
   }
@@ -101,7 +111,7 @@ app.post("/ping/receive",
     if ( !message ){
       res.status(500).send({error:"No message found in request"});
       return;
-    } else if ( !message.sequence ){
+    } else if ( typeof(message.sequence) === "undefined" ){
       res.status(500).send({error:"No message sequence number found"});
       return;
     }
@@ -127,7 +137,7 @@ app.post("/ping/didYouGetThese",
       return function(message) { return message.sequence === number; };
     }
     for (var i=0;i<sequenceList.length;i++){
-      var gotIt = _.find(receivedPings, findForSequenceNumber(sequenceList[i]));
+      var gotIt = _.find(receivedPings, findForSequenceNumber(sequenceList[i].sequence));
       if (gotIt === undefined){
         res.status(500).send({error:"Missing message", sequenceNumber: sequenceList[i]}); 
         return;
@@ -146,10 +156,22 @@ app.post("/ping/clearReceived",
   }
 );
 
-
 app.get("/ping/showReceived",
   function(req,res){
     res.send(receivedPings);
+  }
+);
+
+app.get("/ping/clearSent",
+  function(req,res){
+    pingsSent = [];
+    res.send({message:"ok"});
+  }
+);
+
+app.get("/ping/showSent",
+  function(req,res){
+    res.send(pingsSent);
   }
 );
 // </diagnostic methods>
