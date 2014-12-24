@@ -83,12 +83,16 @@ app.get("/diagnostic",
 // short cut to sending a specific (/bottle/ping) message
 app.get("/ping",
   function(req, res) {
-    var messageStr = '{"source": "/bottle/ping", "sequence":' + (pingSequenceNumber++) + '}'
+    var message = {
+      source: "/bottle/ping"
+      ,sequence: pingSequenceNumber++
+      ,sent: new Date()
+    };
     sendMessage(res,
-      messageStr,
+      JSON.stringify(message),
       function(){
         returnBasedOnLastMessageAge(res);
-        pingsSent.push(JSON.parse(messageStr));
+        pingsSent.push(message);
       }
     );
     lastPingSentAt = new Date();
@@ -129,6 +133,7 @@ app.post("/ping/receive",
 app.post("/ping/didYouGetThese",
   function(req, res){
     var sequenceList = req.body;  
+    var matchingReceivedMessages = [];
     if ( !sequenceList || !_.isArray(sequenceList) || sequenceList.length === 0){
       res.status(500).send({error:"No message found in request"});
       return;
@@ -141,11 +146,11 @@ app.post("/ping/didYouGetThese",
       if (gotIt === undefined){
         res.status(500).send({error:"Missing message", sequenceNumber: sequenceList[i]}); 
         return;
+      } else {
+        matchingReceivedMessages.push(gotIt);
       }
     }
-    // remove any of the messages that we've validated as being received by us
-    _.remove(receivedPings, function(message) { return _.contains(sequenceList, message.sequence); });
-    res.send({message:"got 'em all", sequenceNumbers:sequenceList});
+    res.send({message:"got 'em all", sequenceNumbers:matchingReceivedMessages});
   }
 );
 
