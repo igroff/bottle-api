@@ -22,6 +22,8 @@ var receivedPings = [];
 var pingSequenceNumber = 0;
 var pingsSent = [];
 
+var sequencePrefix = process.env.INSTANCE_ID || (new Date().getTime() + "-" + process.pid)
+
 var app = express();
 AWS.config.update({region: process.env.AWS_REGION || "us-east-1"});
 
@@ -29,6 +31,10 @@ app.use(connect());
 app.use(morgan('combined'));
 app.use(cookieParser());
 app.use(bodyParser.json());
+
+function nextSequenceNumber(){
+  return sequencePrefix + "-" + (pingSequenceNumber++);
+}
 
 function sendMessage(res, messageBody, callback){
   function sendMessageCallback(err, data){
@@ -85,7 +91,7 @@ app.get("/ping",
   function(req, res) {
     var message = {
       source: "/bottle/ping"
-      ,sequence: pingSequenceNumber++
+      ,sequence: nextSequenceNumber()
       ,sent: new Date()
     };
     sendMessage(res,
@@ -111,7 +117,7 @@ app.get("/ping/currentSequenceNumber",
 app.post("/ping/receive",
   function(req, res) {
     var message = req.body;  
-    log.debug("processing message: %j", message);
+    log.debug("processing message: type %s %j", typeof(message),  message);
     if ( !message ){
       res.status(500).send({error:"No message found in request"});
       return;
@@ -167,7 +173,7 @@ app.get("/ping/showReceived",
   }
 );
 
-app.get("/ping/clearSent",
+app.post("/ping/clearSent",
   function(req,res){
     pingsSent = [];
     res.send({message:"ok"});
