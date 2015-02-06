@@ -86,22 +86,48 @@ app.get("/diagnostic",
   function(req, res) { res.end(); }
 );
 
+function getQueueMessageCount(url, retVal, itemName, callback){
+  if (!url){ return callback(null, retVal); }
+  message = {
+    QueueUrl: url, 
+    AttributeNames: [ 'ApproximateNumberOfMessages' ]
+  };
+  var sqs = new AWS.SQS();
+  sqs.getQueueAttributes(message, function(err, data){
+    if (err){
+      retVal[itemName] = {error: err};
+      retVal['error'] = true
+    } else {
+      retVal[itemName] = data.Attributes.ApproximateNumberOfMessages;
+    }
+    callback(err, retVal);
+  });
+}
+
 app.get("/messageCount",
   function(req, res){
-    message = {
-      QueueUrl: process.env.ROUTER_QUEUE_URL,
-      AttributeNames: [ 'ApproximateNumberOfMessages' ]
-    };
-    var sqs = new AWS.SQS();
-    sqs.getQueueAttributes(message, function(err, data){
-      if (err){
-        res.status(500).send({error: err});
-      } else {
-        res.send({
-          routerQueueCount: data.Attributes.ApproximateNumberOfMessages
-        });
+    function done(err, data){
+      if (err){ res.status(500); }
+      res.send(data);
+    }
+
+    getQueueMessageCount(process.env.ROUTER_QUEUE_URL, {}, 'routerQueueCount',
+      function(err, data){
+        if(!err){
+          getQueueMessageCount(process.env.TASK_QUEUE_URL, data, 'taskQueueCount',
+            function(err, data){
+              if(!err){
+                getQueueMessageCount(process.env.DEAD_QUEUE_URL, data, 'deadQueueCount', done);
+              } else {
+                done(err, data);
+              }
+            }
+          );
+        } else {
+          done(err, data);
+        }
       }
-    });
+    );  
   }
 );
   
