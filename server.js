@@ -86,6 +86,26 @@ app.get("/diagnostic",
   function(req, res) { res.end(); }
 );
 
+app.get("/messageCount",
+  function(req, res){
+    message = {
+      QueueUrl: process.env.ROUTER_QUEUE_URL,
+      AttributeNames: [ 'ApproximateNumberOfMessages' ]
+    };
+    var sqs = new AWS.SQS();
+    sqs.getQueueAttributes(message, function(err, data){
+      if (err){
+        res.status(500).send({error: err});
+      } else {
+        res.send({
+          routerQueueCount: data.Attributes.ApproximateNumberOfMessages
+        });
+      }
+    });
+  }
+);
+  
+
 // short cut to sending a specific (/bottle/ping) message
 app.get("/ping",
   function(req, res) {
