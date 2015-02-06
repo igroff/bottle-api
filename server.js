@@ -97,9 +97,26 @@ app.get("/messageCount",
       if (err){
         res.status(500).send({error: err});
       } else {
-        res.send({
-          routerQueueCount: data.Attributes.ApproximateNumberOfMessages
-        });
+        if (process.env.TASK_QUEUE_URL){
+          message = {
+            QueueUrl: process.env.TASK_QUEUE_URL,
+            AttributeNames: [ 'ApproximateNumberOfMessages' ]
+          };
+          sqs.getQueueAttributes(message, function(tqError, tqData){
+            if (err){
+              res.status(500).send({error: err});
+            } else {
+              res.send({
+                routerQueueCount: data.Attributes.ApproximateNumberOfMessages,
+                taskQueueCount: tqData.Attributes.ApproximateNumberOfMessages
+              });
+            }
+          });
+        } else {
+          res.send({
+            routerQueueCount: data.Attributes.ApproximateNumberOfMessages
+          });
+        }
       }
     });
   }
