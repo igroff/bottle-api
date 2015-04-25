@@ -36,7 +36,7 @@ function nextSequenceNumber(){
   return sequencePrefix + "-" + (pingSequenceNumber++);
 }
 
-function sendMessage(res, messageBody, callback){
+function sendMessage(res, delaySeconds, messageBody, callback){
   function sendMessageCallback(err, data){
     if ( err ){
       log.error("error sending message to router: " + err);
@@ -56,7 +56,8 @@ function sendMessage(res, messageBody, callback){
   }else{
     message = {
       QueueUrl: process.env.ROUTER_QUEUE_URL,
-      MessageBody: messageBody
+      MessageBody: messageBody,
+      DelaySeconds: delaySeconds
     };
     var sqs = new AWS.SQS();
     sqs.sendMessage(message, sendMessageCallback);
@@ -140,7 +141,9 @@ app.get("/ping",
       ,sequence: nextSequenceNumber()
       ,sent: new Date()
     };
-    sendMessage(res,
+    sendMessage(
+      res,
+      0,
       JSON.stringify(message),
       function(){
         returnBasedOnLastMessageAge(res);
@@ -238,7 +241,11 @@ app.post("/send", function(req, res){
     log.error("no request body ( message ) found in request");
     res.status(400).end();
   } else {
-    sendMessage(res, JSON.stringify(req.body));
+    var delaySeconds = 0;
+    if ( type(req.body.visibilityTimeoutSeconds) == "number" ) {
+      delaySeconds = req.body.visibilityTimeoutSeconds;
+    }
+    sendMessage(res, delaySeconds, JSON.stringify(req.body));
   }
 });
 
