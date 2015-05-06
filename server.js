@@ -242,7 +242,7 @@ app.post("/send", function(req, res){
     res.status(400).end();
   } else {
     var delaySeconds = 0;
-    if ( type(req.body.visibilityTimeoutSeconds) == "number" ) {
+    if ( typeof(req.body.visibilityTimeoutSeconds) == "number" ) {
       delaySeconds = req.body.visibilityTimeoutSeconds;
     }
     sendMessage(res, delaySeconds, JSON.stringify(req.body));
