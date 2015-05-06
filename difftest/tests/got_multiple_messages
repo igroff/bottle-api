@@ -1,7 +1,12 @@
 #! /usr/bin/env bash
 # vi:ft=sh
 curl -s -X POST http://localhost:8000/ping/clearReceived
+echo
 curl -s http://localhost:8000/ping/receive --data '{"sequence":1}' -H 'Content-Type:application/json'
+echo
 curl -s http://localhost:8000/ping/receive --data '{"sequence":2}' -H 'Content-Type:application/json'
+echo
 curl -s http://localhost:8000/ping/didYouGetThese --data '[1,2]' -H 'Content-Type:application/json'
+echo
 curl -s http://localhost:8000/ping/showReceived
+echo

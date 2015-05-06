@@ -1,1 +1,5 @@
-{"message":"ok"}{}{}{"message":"got 'em all","sequenceNumbers":[1,2]}[]
+{"message":"ok"}
+{}
+{}
+{"message":"got 'em all","messages":[{"sequence":1,"received":"WasADate"},{"sequence":2,"received":"WasADate"}]}
+[{"sequence":1,"received":"WasADate"},{"sequence":2,"received":"WasADate"}]

@@ -190,22 +190,23 @@ app.post("/ping/didYouGetThese",
     var sequenceList = req.body;  
     var matchingReceivedMessages = [];
     if ( !sequenceList || !_.isArray(sequenceList) || sequenceList.length === 0){
-      res.status(500).send({error:"No message found in request"});
+      res.status(500).send({error:"No sequence list found in request"});
       return;
     } 
     function findForSequenceNumber(number){
       return function(message) { return message.sequence === number; };
     }
     for (var i=0;i<sequenceList.length;i++){
-      var gotIt = _.find(receivedPings, findForSequenceNumber(sequenceList[i].sequence));
+      var findThisSequenceNumber = sequenceList[i];
+      var gotIt = _.find(receivedPings, findForSequenceNumber(findThisSequenceNumber));
       if (gotIt === undefined){
-        res.status(500).send({error:"Missing message", sequenceNumber: sequenceList[i]}); 
+        res.status(500).send({error:"Missing message", sequenceNumber: findThisSequenceNumber}); 
         return;
       } else {
         matchingReceivedMessages.push(gotIt);
       }
     }
-    res.send({message:"got 'em all", sequenceNumbers:matchingReceivedMessages});
+    res.send({message:"got 'em all", messages:matchingReceivedMessages});
   }
 );
 
