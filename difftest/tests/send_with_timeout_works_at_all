@@ -1,2 +1,2 @@
 #! /usr/bin/env bash
-curl -s http://localhost:8000/send --data '{"someData":"data is here", "visibilityTimeoutSeconds":30, "source":"unittests"}' -H 'Content-Type: application/json' -o /dev/null --write-out '%{http_code}'
+curl -s http://localhost:8000/send --data '{"someData":"data is here", "deliveryDelaySeconds":30, "source":"unittests"}' -H 'Content-Type: application/json' -o /dev/null --write-out '%{http_code}'
