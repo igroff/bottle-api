@@ -243,8 +243,8 @@ app.post("/send", function(req, res){
     res.status(400).end();
   } else {
     var delaySeconds = 0;
-    if ( typeof(req.body.visibilityTimeoutSeconds) == "number" ) {
-      delaySeconds = req.body.visibilityTimeoutSeconds;
+    if ( typeof(req.body.deliveryDelaySeconds) == "number" ) {
+      delaySeconds = req.body.deliveryDelaySeconds;
     }
     sendMessage(res, delaySeconds, JSON.stringify(req.body));
   }
