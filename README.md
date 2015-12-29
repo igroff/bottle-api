@@ -22,7 +22,11 @@ Send is the endpoint to which you will POST your messages.  Messages sent to thi
 documents in the body of the request, and the Content-Type header of the request must be set to `application/json`. For a 
 painfully simple example:
 
-        curl http://some.bottle.http.server.com/send --data '{"sequence":1}' -H 'Content-Type:application/json'
+        curl http://some.bottle.http.server.com/send --data '{"source":"app/testing", "sequence":1}' -H 'Content-Type:application/json'
+
+The above will create a message containing a data value named sequence with a value of 1, and send it to all parties subscribed 
+to the app/testing source.  That is to say any subscriber to the message app/testing will get the message, for subscription configuration
+see [bottle](http://github.com/igroff/bottle.git).
 
 ``` /diagnostic ```
 
