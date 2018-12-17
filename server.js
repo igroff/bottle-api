@@ -30,7 +30,7 @@ AWS.config.update({region: process.env.AWS_REGION || "us-east-1"});
 app.use(connect());
 app.use(morgan('combined'));
 app.use(cookieParser());
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '256kb'}));
 
 function nextSequenceNumber(){
   return sequencePrefix + "-" + (pingSequenceNumber++);
